@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
+// to test config package use: go test -v ./config
+
 type IntegSuite struct {
 	suite.Suite
 	cfg *Config
@@ -27,8 +29,6 @@ func (suite *IntegSuite) SetupTest() {
 func (suite *IntegSuite) TestSetDefaults() {
 	err := suite.cfg.setDefaults()
 	suite.NoError(err)
-	// fmt.Printf("suote.c: %+v\n", suite.cfg)
-	// suite.Equal(tAWSRegion, defs.AWSRegion)
 }
 
 // TestSetEnvVars method
@@ -39,7 +39,7 @@ func (suite *IntegSuite) TestSetEnvVars() {
 	suite.NoError(err)
 
 	// Change a var
-	os.Setenv("Stage", "noexist")
+	os.Setenv("Stage", "no exist")
 	err = suite.cfg.setEnvVars()
 	suite.Error(err)
 
@@ -55,9 +55,8 @@ func (suite *IntegSuite) TestValidateStage() {
 }
 
 // TestSetSSMParams function
-// this test assumes that the CognitoClientID is empty
+// this test assumes that the CognitoClientID in defaults is empty
 func (suite *IntegSuite) TestSetSSMParams() {
-
 	CognitoClientIDBefore := defs.CognitoClientID
 	err := suite.cfg.setSSMParams()
 	suite.NoError(err)

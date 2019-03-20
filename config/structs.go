@@ -2,24 +2,24 @@ package config
 
 // defaults struct
 type defaults struct {
+	AWSAccessKeyID  string `yaml:"AWSAccessKeyID"`
 	AWSRegion       string `yaml:"AWSRegion"`
-	S3Bucket        string `yaml:"S3Bucket"`
-	S3FilePrefix    string `yaml:"S3FilePrefix"`
+	AWSSecretKey    string `yaml:"AWSSecretKey"`
 	CognitoClientID string `yaml:"CognitoClientID"`
 	CognitoPoolID   string `yaml:"CognitoPoolID"`
 	CognitoRegion   string `yaml:"CognitoRegion"`
-	GraphqlURI      string `yaml:"GraphqlURI"`
+	S3Bucket        string `yaml:"S3Bucket"`
 	SsmPath         string `yaml:"SsmPath"`
 	Stage           string `yaml:"Stage"`
 }
 
 type config struct {
+	AWSAccessKeyID  string
 	AWSRegion       string
-	S3Bucket        string
-	S3FilePrefix    string
+	AWSSecretKey    string
 	CognitoClientID string
 	CognitoPoolID   string
 	CognitoRegion   string
-	GraphqlURI      string
+	S3Bucket        string
 	Stage           StageEnvironment
 }

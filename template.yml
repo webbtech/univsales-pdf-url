@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: AppSync Lambda Resolvers
+
+Parameters:
+  IAMUsername:
+    Description: Username of the IAM user for this service
+    Type: String
+    Default: sysadmin
+  KMSKeyID:
+    Description: KMS key id
+    Type: String
+  BucketName:
+    Description: Bucket that stores pdfs
+    Type: String
+
+Resources:
+  Lambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: go1.x
+      CodeUri: ./dist
+      Handler: /url
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          Stage: prod
+      Timeout: 10
+      Events:
+        Create:
+          Type: Api
+          Properties:
+            Path: /
+            Method: post
+        Ping:
+          Type: Api
+          Properties:
+            Path: /
+            Method: get
+      Tags:
+        BillTo: 'Gales'
+
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
+    DeletionPolicy: "Retain"
+    Properties:
+      StageName: Prod
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+      - PolicyName: FunctionParameterAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - ssm:GetParametersByPath
+            Resource:
+              Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/prod/univsales-pdf*
+      - PolicyName: FunctionKMS
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - kms:Decrypt
+            - kms:DescribeKey
+            Resource:
+              Fn::Sub: arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${KMSKeyID}
+      - PolicyName: FunctionLogAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: '*'
+      - PolicyName: FunctionXRayAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+            Resource: '*'
+      - PolicyName: FunctionS3Access
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:*
+            Resource: arn:aws:s3:::${BucketName}/*
+
+Outputs:
+  ProdDataEndpoint:
+    Description: "API Prod stage endpoint"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

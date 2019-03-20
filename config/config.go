@@ -160,11 +160,11 @@ func (c *Config) setSSMParams() (err error) {
 		return err
 	}
 
-	paramLen := len(res.Parameters)
+	/* paramLen := len(res.Parameters)
 	if paramLen == 0 {
-		// err = fmt.Errorf("Error fetching ssm params, total number found: %d", paramLen)
+		err = fmt.Errorf("Error fetching ssm params, total number found: %d", paramLen)
 		return nil
-	}
+	} */
 
 	// Get struct keys so we can test before attempting to set
 	t := reflect.ValueOf(defs).Elem()
@@ -181,13 +181,13 @@ func (c *Config) setSSMParams() (err error) {
 // Copies required fields from the defaults to the Config struct
 func (c *Config) setFinal() (err error) {
 
+	c.AWSAccessKeyID = defs.AWSAccessKeyID
 	c.AWSRegion = defs.AWSRegion
+	c.AWSSecretKey = defs.AWSSecretKey
 	c.CognitoClientID = defs.CognitoClientID
 	c.CognitoPoolID = defs.CognitoPoolID
 	c.CognitoRegion = defs.CognitoRegion
-	c.GraphqlURI = defs.GraphqlURI
 	c.S3Bucket = defs.S3Bucket
-	c.S3FilePrefix = defs.S3FilePrefix
 	err = c.validateStage()
 
 	return err
