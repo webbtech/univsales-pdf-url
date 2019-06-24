@@ -38,9 +38,9 @@ Resources:
       Environment:
         Variables:
           Stage: prod
-          # thundra_apiKey: !Ref ThundraKey
-          # thundra_agent_lambda_report_cloudwatch_enable: true
-          # thundra_lambda_warmup_warmupAware: true
+          thundra_apiKey: !Ref ThundraKey
+          thundra_agent_lambda_report_cloudwatch_enable: true
+          thundra_lambda_warmup_warmupAware: true
       Timeout: 10
       Events:
         Create:
