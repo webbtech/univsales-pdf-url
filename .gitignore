@@ -13,8 +13,10 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# misc
 .env
 dist/
 docs/*
 tmp
 scratch
+package.yml
