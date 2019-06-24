@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "execute-api:Invoke",
+      "Resource": "arn:aws:execute-api:ca-central-1:407205661819:0d9cxfnacl/",
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": [
+            "192.0.2.0/24",
+            "198.51.100.0/24"
+          ]
+        }
+      }
+    }
+  ]
+}

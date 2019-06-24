@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  digest = "1:e92f5581902c345eb4ceffdcd4a854fb8f73cf436d47d837d1ec98ef1fe0a214"
+  name = "github.com/StackExchange/wmi"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5d049714c4a64225c3c79a7cf7d02f7fb5b96338"
+  version = "1.0.0"
+
+[[projects]]
   digest = "1:f39fff1c04503565e175cb045fd0c1b917abccdae0be8900388363b2a5e0a10b"
   name = "github.com/aws/aws-lambda-go"
   packages = [
@@ -70,6 +78,17 @@
   version = "v1.1.1"
 
 [[projects]]
+  digest = "1:440028f55cb322d8cb5b9d5ebec298a00b7d74690a658fe6b1c0c0b44341bfae"
+  name = "github.com/go-ole/go-ole"
+  packages = [
+    ".",
+    "oleutil",
+  ]
+  pruneopts = "UT"
+  revision = "97b6244175ae18ea6eef668034fd6565847501c9"
+  version = "v1.2.4"
+
+[[projects]]
   digest = "1:e1ff887e232b2d8f4f7c7db15a5fac7be418025afc4dda53c59c765dbb5aa6b4"
   name = "github.com/go-playground/locales"
   packages = [
@@ -112,6 +131,25 @@
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:90e282624796901d91e49c98f4a05dc4f6136d1aab7af39bd3dcf3e989273650"
+  name = "github.com/opentracing/opentracing-go"
+  packages = [
+    ".",
+    "log",
+  ]
+  pruneopts = "UT"
+  revision = "659c90643e714681897ec2521c60567dd21da733"
+  version = "v1.1.0"
+
+[[projects]]
+  digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
+
+[[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
@@ -120,15 +158,35 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:eca5c096760f372bd5b866199c2549a30cf28397099adf80e3c676a177f8d100"
-  name = "github.com/pulpfree/gdps-fs-dwnld"
+  digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
+  name = "github.com/satori/go.uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
+  version = "v1.2.0"
+
+[[projects]]
+  digest = "1:c7ed651e351cce6b7cd2a503919208961686b9c676395b2f8ba19614cf7d6e07"
+  name = "github.com/shirou/gopsutil"
   packages = [
-    "model",
-    "validate",
+    "cpu",
+    "host",
+    "internal/common",
+    "mem",
+    "net",
+    "process",
   ]
   pruneopts = "UT"
-  revision = "f369ecfe53d518391c3db856029df14f904b0e91"
-  version = "0.0.1"
+  revision = "6c6abd6d1666d6b27f1c261e0f850441ba22aa3a"
+  version = "v2.19.02"
+
+[[projects]]
+  branch = "master"
+  digest = "1:99c6a6dab47067c9b898e8c8b13d130c6ab4ffbcc4b7cc6236c2cd0b1e344f5b"
+  name = "github.com/shirou/w32"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "bb4de0191aa41b5507caa14b0650cdbddcd9280b"
 
 [[projects]]
   digest = "1:e4c72127d910a96daf869a44f3dd563b86dbe6931a172863a0e99c5ff04b59e4"
@@ -151,6 +209,28 @@
   version = "v1.3.0"
 
 [[projects]]
+  digest = "1:6e6faa8226b0796d1ebbf5df931c22a912fbc34907467932219bedf23ef2d6dc"
+  name = "github.com/thundra-io/thundra-lambda-agent-go"
+  packages = [
+    "agent",
+    "application",
+    "config",
+    "constants",
+    "ext",
+    "invocation",
+    "log",
+    "metric",
+    "plugin",
+    "thundra",
+    "trace",
+    "tracer",
+    "utils",
+  ]
+  pruneopts = "UT"
+  revision = "7a431a053ac6a132cdfb6be4bc32ac70df598446"
+  version = "v2.1.0"
+
+[[projects]]
   branch = "master"
   digest = "1:058e9504b9a79bfe86092974d05bb3298d2aa0c312d266d43148de289a5065d9"
   name = "golang.org/x/crypto"
@@ -168,14 +248,6 @@
   ]
   pruneopts = "UT"
   revision = "fead79001313d15903fb4605b4a1b781532cd93e"
-
-[[projects]]
-  digest = "1:cbc72c4c4886a918d6ab4b95e347ffe259846260f99ebdd8a198c2331cf2b2e9"
-  name = "gopkg.in/go-playground/validator.v8"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "5f1438d3fca68893a817e4a66806cea46a9e4ebf"
-  version = "v8.18.2"
 
 [[projects]]
   digest = "1:a5000fcb87d763e1d410111d32f3e1d07a6f7913f7efdf68070636c407da54d1"
@@ -200,13 +272,13 @@
     "github.com/aws/aws-lambda-go/events",
     "github.com/aws/aws-lambda-go/lambda",
     "github.com/aws/aws-sdk-go/aws",
+    "github.com/aws/aws-sdk-go/aws/credentials",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/s3",
     "github.com/aws/aws-sdk-go/service/ssm",
-    "github.com/pulpfree/gdps-fs-dwnld/validate",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/suite",
-    "gopkg.in/go-playground/validator.v8",
+    "github.com/thundra-io/thundra-lambda-agent-go/thundra",
     "gopkg.in/go-playground/validator.v9",
     "gopkg.in/yaml.v2",
   ]

@@ -11,6 +11,7 @@ import (
 	"github.com/pulpfree/univsales-pdf-url/model"
 	"github.com/pulpfree/univsales-pdf-url/process"
 	"github.com/pulpfree/univsales-pdf-url/validate"
+	"github.com/thundra-io/thundra-lambda-agent-go/thundra"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -59,43 +60,6 @@ func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRes
 		}, hdrs), nil
 	}
 
-	// Check for auth header
-	/* if req.Headers["Authorization"] == "" {
-		return gatewayResponse(Response{
-			Code:      401,
-			Message:   "Missing Authorization header",
-			Status:    "error",
-			Timestamp: t.Unix(),
-		}, hdrs), nil
-	} */
-
-	// Set auth config
-	/* auth, err := auth.New(&auth.Config{
-		ClientID:       cfg.CognitoClientID,
-		PoolID:         cfg.CognitoPoolID,
-		Region:         cfg.CognitoRegion,
-		JwtAccessToken: req.Headers["Authorization"],
-	})
-	if err != nil {
-		return gatewayResponse(Response{
-			Code:      500,
-			Message:   fmt.Sprintf("authentication error: %s", err.Error()),
-			Status:    "error",
-			Timestamp: t.Unix(),
-		}, hdrs), nil
-	} */
-
-	// Validate JWT Token
-	/* err = auth.Validate()
-	if err != nil {
-		return gatewayResponse(Response{
-			Code:      401,
-			Message:   fmt.Sprintf("token validation error: %s", err.Error()),
-			Status:    "error",
-			Timestamp: t.Unix(),
-		}, hdrs), nil
-	} */
-
 	// Set and validate request params
 	var r *model.Request
 	json.Unmarshal([]byte(req.Body), &r)
@@ -140,7 +104,7 @@ func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRes
 }
 
 func main() {
-	lambda.Start(HandleRequest)
+	lambda.Start(thundra.Wrap(HandleRequest))
 }
 
 func gatewayResponse(resp Response, hdrs map[string]string) events.APIGatewayProxyResponse {

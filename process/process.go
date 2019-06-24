@@ -42,10 +42,18 @@ func (p *Process) CreateURL() (url string, err error) {
 
 func (p *Process) assemblePrefix() (prefix string, err error) {
 	tp := p.request.Type
-	if tp == "quote" {
+	switch tp {
+	case "quote":
+		prefix = fmt.Sprintf("/%s/qte-%d-r%d.pdf", tp, p.request.Number, p.request.Version)
+	case "invoice":
+		prefix = fmt.Sprintf("/%s/inv-%d.pdf", tp, p.request.Number)
+	case "worksheet":
+		prefix = fmt.Sprintf("/%s/sht-%d.pdf", tp, p.request.Number)
+	}
+	/* if tp == "quote" {
 		prefix = fmt.Sprintf("/%s/qte-%d-r%d.pdf", tp, p.request.Number, p.request.Version)
 	} else if tp == "invoice" {
 		prefix = fmt.Sprintf("/%s/inv-%d.pdf", tp, p.request.Number)
-	}
+	} */
 	return prefix, err
 }

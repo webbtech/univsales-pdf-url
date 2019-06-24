@@ -1,0 +1,26 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "execute-api:Invoke",
+      "Resource": [
+        "arn:aws:execute-api:ca-central-1:407205661819:0d9cxfnacl/*"
+      ]
+    },
+    {
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "execute-api:Invoke",
+      "Resource": [
+        "arn:aws:execute-api:ca-central-1:407205661819:0d9cxfnacl/*"
+      ],
+      "Condition": {
+        "StringNotEquals": {
+          "aws:SourceVpce": "vpc-904e19f9"
+        }
+      }
+    }
+  ]
+}

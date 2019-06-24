@@ -45,7 +45,8 @@ func (s *S3Service) GetSignedURL(prefix string) (signedURL string, err error) {
 		Key:    aws.String(prefix),
 	})
 
-	urlStr, err := req.Presign(30 * time.Minute)
+	// urlStr, err := req.Presign(60 * time.Minute)
+	urlStr, err := req.Presign(24 * 7 * time.Hour)
 	if err != nil {
 		log.Errorf("Failed to sign request: %s", err.Error())
 		return "", err

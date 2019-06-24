@@ -1,0 +1,1 @@
+"{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Effect\": \"Allow\",\n      \"Principal\": {\n        \"AWS\": [\n          \"arn:aws:iam::407205661819:user/sysadmin\"\n        ]\n      },\n      \"Action\": \"execute-api:Invoke\",\n      \"Resource\": [\n        \"arn:aws:execute-api:ca-central-1:407205661819:0d9cxfnacl/*\"\n      ]\n    }\n  ]\n}"

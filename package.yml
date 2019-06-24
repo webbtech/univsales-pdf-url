@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AppSync Lambda Resolvers
+Description: Universal Sales PDF Signed URL
 Parameters:
   IAMUsername:
     Description: Username of the IAM user for this service
@@ -9,15 +9,23 @@ Parameters:
   KMSKeyID:
     Description: KMS key id
     Type: String
+  ThundraKey:
+    Description: thundra.io API key
+    Type: String
   BucketName:
     Description: Bucket that stores pdfs
     Type: String
 Resources:
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
+    DeletionPolicy: Retain
+    Properties:
+      StageName: Prod
   Lambda:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: go1.x
-      CodeUri: s3://ca-universalwindows/pdf-url-lambda/20de60ef0020738efba1d269a10e81a5
+      CodeUri: s3://ca-universalwindows/pdf-url-lambda/287596159e1629e4634ae0cdd76a6048
       Handler: /url
       Role:
         Fn::GetAtt:
@@ -39,12 +47,7 @@ Resources:
             Path: /
             Method: get
       Tags:
-        BillTo: Gales
-  ServerlessRestApi:
-    Type: AWS::Serverless::Api
-    DeletionPolicy: Retain
-    Properties:
-      StageName: Prod
+        BillTo: Universal
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -103,9 +106,18 @@ Resources:
           - Effect: Allow
             Action:
             - s3:*
-            Resource: arn:aws:s3:::${BucketName}/*
+            Resource:
+              Fn::Sub: arn:aws:s3:::${BucketName}/*
 Outputs:
-  ProdDataEndpoint:
+  ApiId:
+    Description: API ID
+    Value:
+      Ref: ServerlessRestApi
+  ApiEndpoint:
     Description: API Prod stage endpoint
     Value:
       Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+  ApiArn:
+    Description: API ARN
+    Value:
+      Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ServerlessRestApi}/

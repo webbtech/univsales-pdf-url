@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "arn:aws:iam::407205661819:user/sysadmin"
+        ]
+      },
+      "Action": "execute-api:Invoke",
+      "Resource": [
+        "arn:aws:execute-api:ca-central-1:407205661819:0d9cxfnacl/*"
+      ]
+    }
+  ]
+}

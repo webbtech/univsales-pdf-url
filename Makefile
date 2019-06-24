@@ -1,7 +1,6 @@
 include .env
 
-# aws path: ./Python/3.7/bin/aws
-deploy: build awspackage awsdeploy
+default: build awspackage awsdeploy
 
 clean:
 	@rm -rf dist
@@ -39,7 +38,8 @@ awsdeploy:
 	--force-upload \
 	--parameter-overrides \
 	 	KMSKeyID=$(KMS_KEY_ID) \
-		BucketName=$(AWS_BUCKET_NAME)
+		BucketName=$(AWS_BUCKET_NAME) \
+		ThundraKey=$(THUNDRA_API_KEY)
 
 describe:
 	@aws cloudformation describe-stacks \
