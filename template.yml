@@ -4,29 +4,33 @@ Transform: AWS::Serverless-2016-10-31
 Description: Universal Sales PDF Signed URL
 
 Parameters:
-  IAMUsername:
-    Description: Username of the IAM user for this service
-    Type: String
-    Default: sysadmin
-  KMSKeyID:
+  ParamKMSKeyID:
     Description: KMS key id
     Type: String
-  ThundraKey:
+  ParamThundraKey:
     Description: thundra.io API key
     Type: String
-  BucketName:
+  ParamBucketName:
     Description: Bucket that stores pdfs
     Type: String
+  ParamAuthLambda:
+    Type: String
+    Description: Lambda authorizer
 
 Resources:
-  ServerlessRestApi:
+  RestApi:
     Type: AWS::Serverless::Api
     DeletionPolicy: "Retain"
+    DependsOn: Lambda
     Properties:
       StageName: Prod
-      # Auth:
-        # DefaultAuthorizer: AWS_IAM
-        # InvokeRole: CALLER_CREDENTIALS
+      Auth:
+        DefaultAuthorizer: LambdaTokenAuthorizer
+        Authorizers:
+          LambdaTokenAuthorizer:
+            FunctionArn: !Sub "${ParamAuthLambda}"
+            Identity:
+              ReauthorizeEvery: 300
 
   Lambda:
     Type: AWS::Serverless::Function
@@ -35,10 +39,11 @@ Resources:
       CodeUri: ./dist
       Handler: /url
       Role: !GetAtt LambdaRole.Arn
+      
       Environment:
         Variables:
           Stage: prod
-          thundra_apiKey: !Ref ThundraKey
+          thundra_apiKey: !Ref ParamThundraKey
           thundra_agent_lambda_report_cloudwatch_enable: true
           thundra_lambda_warmup_warmupAware: true
       Timeout: 10
@@ -48,11 +53,13 @@ Resources:
           Properties:
             Path: /
             Method: post
+            RestApiId: !Ref RestApi
         Ping:
           Type: Api
           Properties:
             Path: /
             Method: get
+            RestApiId: !Ref RestApi
       Tags:
         BillTo: 'Universal'
 
@@ -87,7 +94,7 @@ Resources:
             - kms:Decrypt
             - kms:DescribeKey
             Resource:
-              Fn::Sub: arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${KMSKeyID}
+              Fn::Sub: arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${ParamKMSKeyID}
       - PolicyName: FunctionLogAccess
         PolicyDocument:
           Version: '2012-10-17'
@@ -115,16 +122,16 @@ Resources:
             Action:
             - s3:*
             Resource: 
-              Fn::Sub: arn:aws:s3:::${BucketName}/*
+              Fn::Sub: arn:aws:s3:::${ParamBucketName}/*
 
 Outputs:
   ApiId:
     Description: API ID
     Value:
-      Ref: ServerlessRestApi
+      Ref: RestApi
   ApiEndpoint:
     Description: "API Prod stage endpoint"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+    Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
   ApiArn:
     Description: "API ARN"
-    Value: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ServerlessRestApi}/"
+    Value: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/"
