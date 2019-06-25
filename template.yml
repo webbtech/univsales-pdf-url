@@ -20,7 +20,7 @@ Parameters:
 Resources:
   RestApi:
     Type: AWS::Serverless::Api
-    DeletionPolicy: "Retain"
+    DeletionPolicy: Delete
     DependsOn: Lambda
     Properties:
       StageName: Prod
