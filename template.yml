@@ -39,13 +39,16 @@ Resources:
       CodeUri: ./dist
       Handler: /url
       Role: !GetAtt LambdaRole.Arn
-      
       Environment:
         Variables:
           Stage: prod
           thundra_apiKey: !Ref ParamThundraKey
-          thundra_agent_lambda_report_cloudwatch_enable: true
-          thundra_lambda_warmup_warmupAware: true
+          # thundra_agent_lambda_report_cloudwatch_enable: true
+          # thundra_lambda_warmup_warmupAware: true
+          thundra_agent_lambda_report_cloudwatch_enable: false
+          # uncomment below once live
+          # thundra_lambda_warmup_warmupAware: true
+          # thundra_agent_lambda_warmup_warmupAware: true
       Timeout: 10
       Events:
         Create:
@@ -135,3 +138,9 @@ Outputs:
   ApiArn:
     Description: "API ARN"
     Value: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/"
+  LambdaArn:
+    Description: "Lambda ARN"
+    Value: !GetAtt Lambda.Arn
+  LambdaRoleArn:
+    Description: "Lambda Role ARN"
+    Value: !GetAtt LambdaRole.Arn
