@@ -67,7 +67,8 @@ func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRes
 	if err != nil {
 		return gatewayResponse(Response{
 			Code:      500,
-			Message:   fmt.Sprintf("request validation error: %s", err.Error()),
+			// Message:   fmt.Sprintf("request validation error: %v", err.Error()),
+			Message:   "request validation error",
 			Status:    "error",
 			Timestamp: t.Unix(),
 		}, hdrs), nil
@@ -104,7 +105,8 @@ func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRes
 }
 
 func main() {
-	lambda.Start(thundra.Wrap(HandleRequest))
+	// lambda.Start(thundra.Wrap(HandleRequest))
+	lambda.Start(HandleRequest)
 }
 
 func gatewayResponse(resp Response, hdrs map[string]string) events.APIGatewayProxyResponse {

@@ -158,6 +158,20 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:87565f0436d768bcb5c103237d6fe0277901f2c36b81b534079928b1deee1e4a"
+  name = "github.com/pulpfree/univsales-pdf-url"
+  packages = [
+    "awsservices",
+    "config",
+    "model",
+    "process",
+    "validate",
+  ]
+  pruneopts = "UT"
+  revision = "e1c4baffb9672359d3d418e3cf4c6dc7caf76314"
+
+[[projects]]
   digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
   name = "github.com/satori/go.uuid"
   packages = ["."]
@@ -276,6 +290,11 @@
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/s3",
     "github.com/aws/aws-sdk-go/service/ssm",
+    "github.com/pulpfree/univsales-pdf-url/awsservices",
+    "github.com/pulpfree/univsales-pdf-url/config",
+    "github.com/pulpfree/univsales-pdf-url/model",
+    "github.com/pulpfree/univsales-pdf-url/process",
+    "github.com/pulpfree/univsales-pdf-url/validate",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/suite",
     "github.com/thundra-io/thundra-lambda-agent-go/thundra",
