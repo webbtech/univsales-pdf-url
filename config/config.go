@@ -180,7 +180,6 @@ func (c *Config) setSSMParams() (err error) {
 
 // Copies required fields from the defaults to the Config struct
 func (c *Config) setFinal() (err error) {
-
 	c.AWSAccessKeyID = defs.AWSAccessKeyID
 	c.AWSRegion = defs.AWSRegion
 	c.AWSSecretKey = defs.AWSSecretKey
