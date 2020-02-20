@@ -1,32 +1,71 @@
 AWSTemplateFormatVersion : '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
-Description: Universal Sales PDF Signed URL
+Description: Universal Sales PDF Signed URL Service
 
 Parameters:
-  IAMUsername:
-    Description: Username of the IAM user for this service
+  ParamCertificateArn:
+    Description: Domain Certificate Arn
     Type: String
-    Default: sysadmin
-  KMSKeyID:
+  ParamCustomDomainName:
+    Description: Custom Domain Name
+    Type: String
+  ParamHostedZoneId:
+    Description: Hosted Zone ID
+    Type: String
+  ParamKMSKeyID:
     Description: KMS key id
     Type: String
-  ThundraKey:
-    Description: thundra.io API key
-    Type: String
-  BucketName:
+  ParamStorageBucket:
     Description: Bucket that stores pdfs
+    Type: String
+  ParamProjectName:
+    Description: Project name
     Type: String
 
 Resources:
-  ServerlessRestApi:
+  RestApi:
     Type: AWS::Serverless::Api
-    DeletionPolicy: "Retain"
+    DeletionPolicy: Delete
+    DependsOn: 
+      - Lambda
+      - AuthLambda
     Properties:
       StageName: Prod
-      # Auth:
-        # DefaultAuthorizer: AWS_IAM
-        # InvokeRole: CALLER_CREDENTIALS
+      EndpointConfiguration: REGIONAL
+      # Note, this property does not work with sam local
+      Auth:
+        DefaultAuthorizer: LambdaTokenAuthorizer
+        Authorizers:
+          LambdaTokenAuthorizer:
+            FunctionArn: !GetAtt AuthLambda.Arn
+            Identity:
+              ReauthorizeEvery: 300
+              # ReauthorizeEvery: 1 #testing only
+
+      # Documentation for below: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#gateway-response-object
+      GatewayResponses:
+        UNAUTHORIZED:
+          StatusCode: 401
+          ResponseTemplates:
+            "application/json": '{ "message": $context.error.messageString }'
+          ResponseParameters:
+            Headers:
+              Access-Control-Expose-Headers: "'WWW-Authenticate'"
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'*'"
+
+      # Docs for this at: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#domain-configuration-object
+      Domain:
+        DomainName: !Ref ParamCustomDomainName
+        CertificateArn: !Ref ParamCertificateArn
+        EndpointConfiguration: "REGIONAL"
+        Route53:
+          HostedZoneId: !Ref ParamHostedZoneId
+          EvaluateTargetHealth: true
+          DistributionDomainName:
+            Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+
 
   Lambda:
     Type: AWS::Serverless::Function
@@ -35,24 +74,48 @@ Resources:
       CodeUri: ./dist
       Handler: /url
       Role: !GetAtt LambdaRole.Arn
+      Timeout: 10
+      MemorySize: 512
+      # AutoPublishAlias: prod
       Environment:
         Variables:
           Stage: prod
-          thundra_apiKey: !Ref ThundraKey
-          thundra_agent_lambda_report_cloudwatch_enable: true
-          thundra_lambda_warmup_warmupAware: true
-      Timeout: 10
+      Tags:
+        BillTo: 'Universal'
       Events:
         Create:
           Type: Api
           Properties:
             Path: /
-            Method: post
+            Method: POST
+            RestApiId: !Ref RestApi
+            Auth:
+              Authorizer: LambdaTokenAuthorizer
         Ping:
           Type: Api
           Properties:
             Path: /
-            Method: get
+            Method: GET
+            RestApiId: !Ref RestApi
+            Auth:
+              Authorizer: NONE
+        Options:
+          Type: Api
+          Properties:
+            Path: /
+            Method: OPTIONS
+            RestApiId: !Ref RestApi
+            Auth:
+              Authorizer: NONE
+
+  AuthLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./dist
+      Handler: /authorizer
+      Runtime: go1.x
+      Role: !GetAtt AuthLambdaRole.Arn
+      MemorySize: 256
       Tags:
         BillTo: 'Universal'
 
@@ -77,7 +140,7 @@ Resources:
             Action:
             - ssm:GetParametersByPath
             Resource:
-              Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/prod/univsales-pdf*
+              Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/prod/univsales-pdf-url*
       - PolicyName: FunctionKMS
         PolicyDocument:
           Version: '2012-10-17'
@@ -87,7 +150,7 @@ Resources:
             - kms:Decrypt
             - kms:DescribeKey
             Resource:
-              Fn::Sub: arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${KMSKeyID}
+              Fn::Sub: arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${ParamKMSKeyID}
       - PolicyName: FunctionLogAccess
         PolicyDocument:
           Version: '2012-10-17'
@@ -115,16 +178,71 @@ Resources:
             Action:
             - s3:*
             Resource: 
-              Fn::Sub: arn:aws:s3:::${BucketName}/*
+              Fn::Sub: arn:aws:s3:::${ParamStorageBucket}/*
+
+  AuthLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+      - PolicyName: FunctionParameterAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - ssm:GetParametersByPath
+            Resource:
+              Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/prod/univsales-pdf-url*
+      - PolicyName: FunctionKMS
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - kms:Decrypt
+            - kms:DescribeKey
+            Resource:
+              Fn::Sub: arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${ParamKMSKeyID}
+      - PolicyName: FunctionLogAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: '*'
 
 Outputs:
   ApiId:
     Description: API ID
     Value:
-      Ref: ServerlessRestApi
+      Ref: RestApi
   ApiEndpoint:
     Description: "API Prod stage endpoint"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+    Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
   ApiArn:
     Description: "API ARN"
-    Value: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ServerlessRestApi}/"
+    Value: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/"
+  LambdaArn:
+    Description: "Lambda ARN"
+    Value: !GetAtt Lambda.Arn
+  LambdaRoleArn:
+    Description: "Lambda Role ARN"
+    Value: !GetAtt LambdaRole.Arn
+  AuthLambdaArn:
+    Description: "Authorizer Lambda ARN"
+    Value: !GetAtt AuthLambda.Arn
+  AuthLambdaRoleArn:
+    Description: "Authorizer Lambda Role ARN"
+    Value: !GetAtt AuthLambdaRole.Arn

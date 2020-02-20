@@ -2,29 +2,19 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/pulpfree/univsales-pdf-url/config"
 	"github.com/pulpfree/univsales-pdf-url/model"
+	"github.com/pulpfree/univsales-pdf-url/pkgerrors"
 	"github.com/pulpfree/univsales-pdf-url/process"
 	"github.com/pulpfree/univsales-pdf-url/validate"
-	"github.com/thundra-io/thundra-lambda-agent-go/thundra"
 
 	log "github.com/sirupsen/logrus"
 )
-
-var cfg *config.Config
-
-func init() {
-	cfg = &config.Config{}
-	err := cfg.Load()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
 
 // Response data format
 type Response struct {
@@ -40,6 +30,19 @@ type SignedURL struct {
 	URL string `json:"url"`
 }
 
+var (
+	cfg      *config.Config
+	stdError *pkgerrors.StdError
+)
+
+func init() {
+	cfg = &config.Config{}
+	err := cfg.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 // HandleRequest function
 func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -47,6 +50,14 @@ func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRes
 
 	hdrs := make(map[string]string)
 	hdrs["Content-Type"] = "application/json"
+	hdrs["Access-Control-Allow-Origin"] = "*"
+	hdrs["Access-Control-Allow-Methods"] = "GET,OPTIONS,POST,PUT"
+	hdrs["Access-Control-Allow-Headers"] = "Authorization,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token"
+
+	if req.HTTPMethod == "OPTIONS" {
+		return events.APIGatewayProxyResponse{Body: string("null"), Headers: hdrs, StatusCode: 200}, nil
+	}
+
 	t := time.Now()
 
 	// If this is a ping test, intercept and return
@@ -57,62 +68,65 @@ func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRes
 			Data:      "pong",
 			Status:    "success",
 			Timestamp: t.Unix(),
-		}, hdrs), nil
+		}, hdrs, nil), nil
 	}
 
 	// Set and validate request params
 	var r *model.Request
 	json.Unmarshal([]byte(req.Body), &r)
+
+	// validate input
 	err = validate.RequestInput(r)
 	if err != nil {
 		return gatewayResponse(Response{
-			Code:      500,
-			Message:   fmt.Sprintf("request validation error: %s", err.Error()),
-			Status:    "error",
 			Timestamp: t.Unix(),
-		}, hdrs), nil
+		}, hdrs, err), nil
 	}
 
 	// Process request
 	process, err := process.New(r, cfg)
 	if err != nil {
 		return gatewayResponse(Response{
-			Code:      500,
-			Message:   fmt.Sprintf("report fetch error: %s", err.Error()),
-			Status:    "error",
 			Timestamp: t.Unix(),
-		}, hdrs), nil
+		}, hdrs, err), nil
 	}
 
 	url, err := process.CreateURL()
 	if err != nil {
 		return gatewayResponse(Response{
-			Code:      500,
-			Message:   fmt.Sprintf("report create url error: %s", err.Error()),
-			Status:    "error",
 			Timestamp: t.Unix(),
-		}, hdrs), nil
+		}, hdrs, err), nil
 	}
-	log.Infof("signed url created %s", url)
+
+	urlStr := url[0:100]
+	log.Infof("signed url created: %s", urlStr)
 
 	return gatewayResponse(Response{
 		Code:      201,
 		Data:      SignedURL{URL: url},
 		Status:    "success",
 		Timestamp: t.Unix(),
-	}, hdrs), nil
+	}, hdrs, nil), nil
 }
 
 func main() {
-	lambda.Start(thundra.Wrap(HandleRequest))
+	lambda.Start(HandleRequest)
 }
 
-func gatewayResponse(resp Response, hdrs map[string]string) events.APIGatewayProxyResponse {
+func gatewayResponse(resp Response, hdrs map[string]string, err error) events.APIGatewayProxyResponse {
 
-	body, _ := json.Marshal(&resp)
-	if resp.Status == "error" {
-		log.Errorf("Error: status: %s, code: %d, message: %s", resp.Status, resp.Code, resp.Message)
+	if err != nil {
+		resp.Code = 500
+		resp.Status = "error"
+		log.Error(err)
+		// send friendly error to client
+		if ok := errors.As(err, &stdError); ok {
+			resp.Message = stdError.Msg
+		} else {
+			resp.Message = err.Error()
+		}
 	}
+	body, _ := json.Marshal(&resp)
 
 	return events.APIGatewayProxyResponse{Body: string(body), Headers: hdrs, StatusCode: resp.Code}
 }

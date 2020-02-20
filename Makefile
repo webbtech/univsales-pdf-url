@@ -10,6 +10,7 @@ build: clean
 	@for dir in `ls handler`; do \
 		GOOS=linux go build -o dist/$$dir github.com/pulpfree/univsales-pdf-url/handler/$$dir; \
 	done
+	@GOOS=linux go build -o dist/authorizer github.com/pulpfree/univsales-pdf-url/authorizer;
 	@cp ./config/defaults.yml dist/
 	@echo "build successful"
 
@@ -37,9 +38,12 @@ awsdeploy:
 	--profile $(AWS_PROFILE) \
 	--force-upload \
 	--parameter-overrides \
-	 	KMSKeyID=$(KMS_KEY_ID) \
-		BucketName=$(AWS_BUCKET_NAME) \
-		ThundraKey=$(THUNDRA_API_KEY)
+		ParamCertificateArn=$(CERTIFICATE_ARN) \
+		ParamCustomDomainName=$(CUSTOM_DOMAIN_NAME) \
+		ParamHostedZoneId=$(HOSTED_ZONE_ID) \
+	 	ParamKMSKeyID=$(KMS_KEY_ID) \
+		ParamProjectName=$(PROJECT_NAME) \
+		ParamStorageBucket=$(AWS_STORAGE_BUCKET)
 
 describe:
 	@aws cloudformation describe-stacks \
