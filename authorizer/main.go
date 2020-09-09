@@ -13,42 +13,39 @@ package main
 // express or implied. See the License for the specific language governing
 // permissions and limitations under the License.
 
-// This file originally found at: https://github.com/awslabs/aws-apigateway-lambda-authorizer-blueprints/blob/master/blueprints/go/main.go
+// This file taken from: https://github.com/awslabs/aws-apigateway-lambda-authorizer-blueprints/blob/master/blueprints/go/main.go
 
 import (
 	"context"
 	"errors"
-	"log"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/pulpfree/lambda-utils/tokenvalidator"
-	"github.com/pulpfree/univsales-pdf-url/config"
+	auth "github.com/pulpfree/lambda-go-auth"
+	log "github.com/sirupsen/logrus"
 )
 
-var cfg *config.Config
+// Ensure you set these based on the cognito user pool
+const (
+	cognitoPoolID = "ca-central-1_1DQjnU6jd"
+	cognitoRegion = "ca-central-1"
+)
 
-func init() {
-	cfg = &config.Config{}
-	err := cfg.Load()
-	if err != nil {
-		log.Fatal(err)
-	}
+func getJWKURL() string {
+	return fmt.Sprintf("https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json", cognitoRegion, cognitoPoolID)
 }
 
 func handleRequest(ctx context.Context, event events.APIGatewayCustomAuthorizerRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
-	// log.Println("Client token: " + event.AuthorizationToken)
-	// log.Println("Method ARN: " + event.MethodArn)
-
-	principalID, err := tokenvalidator.Validate(cfg.CognitoClientID, event.AuthorizationToken)
-	if err != nil {
-		log.Println("Error in token validation: " + err.Error())
-		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("Unauthorized")
-	}
 
 	// validate the incoming token
 	// and produce the principal user identifier associated with the token
+	principalID, err := auth.Validate(event.AuthorizationToken, getJWKURL())
+	if err != nil {
+		log.Errorf("Error in token validation: %+v", err.Error())
+		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("Unauthorized")
+	}
 
 	// this could be accomplished in a number of ways:
 	// 1. Call out to OAuth provider

@@ -2,38 +2,31 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"time"
+
+	pres "github.com/pulpfree/lambda-go-proxy-response"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/epsagon/epsagon-go/epsagon"
 	"github.com/pulpfree/univsales-pdf-url/config"
 	"github.com/pulpfree/univsales-pdf-url/model"
-	"github.com/pulpfree/univsales-pdf-url/pkgerrors"
 	"github.com/pulpfree/univsales-pdf-url/process"
 	"github.com/pulpfree/univsales-pdf-url/validate"
-
-	log "github.com/sirupsen/logrus"
 )
-
-// Response data format
-type Response struct {
-	Code      int         `json:"code"`      // HTTP status code
-	Data      interface{} `json:"data"`      // Data payload
-	Message   string      `json:"message"`   // Error or status message
-	Status    string      `json:"status"`    // Status code (error|fail|success)
-	Timestamp int64       `json:"timestamp"` // Machine-readable UTC timestamp in nanoseconds since EPOCH
-}
 
 // SignedURL struct
 type SignedURL struct {
 	URL string `json:"url"`
 }
 
-var (
-	cfg      *config.Config
-	stdError *pkgerrors.StdError
+const (
+	epsagonAppName = "univsales"
+	epsagonToken   = "73993039-d583-43ad-84eb-1a443e257274"
 )
+
+var cfg *config.Config
 
 func init() {
 	cfg = &config.Config{}
@@ -63,7 +56,7 @@ func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRes
 	// If this is a ping test, intercept and return
 	if req.HTTPMethod == "GET" {
 		log.Info("Ping test in handleRequest")
-		return gatewayResponse(Response{
+		return pres.ProxyRes(pres.Response{
 			Code:      200,
 			Data:      "pong",
 			Status:    "success",
@@ -78,7 +71,7 @@ func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRes
 	// validate input
 	err = validate.RequestInput(r)
 	if err != nil {
-		return gatewayResponse(Response{
+		return pres.ProxyRes(pres.Response{
 			Timestamp: t.Unix(),
 		}, hdrs, err), nil
 	}
@@ -86,14 +79,14 @@ func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRes
 	// Process request
 	process, err := process.New(r, cfg)
 	if err != nil {
-		return gatewayResponse(Response{
+		return pres.ProxyRes(pres.Response{
 			Timestamp: t.Unix(),
 		}, hdrs, err), nil
 	}
 
 	url, err := process.CreateURL()
 	if err != nil {
-		return gatewayResponse(Response{
+		return pres.ProxyRes(pres.Response{
 			Timestamp: t.Unix(),
 		}, hdrs, err), nil
 	}
@@ -101,7 +94,7 @@ func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRes
 	urlStr := url[0:100]
 	log.Infof("signed url created: %s", urlStr)
 
-	return gatewayResponse(Response{
+	return pres.ProxyRes(pres.Response{
 		Code:      201,
 		Data:      SignedURL{URL: url},
 		Status:    "success",
@@ -110,23 +103,8 @@ func HandleRequest(req events.APIGatewayProxyRequest) (events.APIGatewayProxyRes
 }
 
 func main() {
-	lambda.Start(HandleRequest)
-}
-
-func gatewayResponse(resp Response, hdrs map[string]string, err error) events.APIGatewayProxyResponse {
-
-	if err != nil {
-		resp.Code = 500
-		resp.Status = "error"
-		log.Error(err)
-		// send friendly error to client
-		if ok := errors.As(err, &stdError); ok {
-			resp.Message = stdError.Msg
-		} else {
-			resp.Message = err.Error()
-		}
-	}
-	body, _ := json.Marshal(&resp)
-
-	return events.APIGatewayProxyResponse{Body: string(body), Headers: hdrs, StatusCode: resp.Code}
+	log.Println("enter main")
+	lambda.Start(epsagon.WrapLambdaHandler(
+		epsagon.NewTracerConfig(epsagonAppName, epsagonToken),
+		HandleRequest))
 }
