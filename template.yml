@@ -116,6 +116,7 @@ Resources:
       Runtime: go1.x
       Role: !GetAtt AuthLambdaRole.Arn
       MemorySize: 256
+      Timeout: 10
       Tags:
         BillTo: 'Universal'
 
@@ -234,6 +235,12 @@ Outputs:
   ApiArn:
     Description: "API ARN"
     Value: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/"
+  ApiFQDN:
+    Description: "API Domain Name"
+    Value: !Ref ParamCustomDomainName
+  ApiURL:
+    Description: "API Url"
+    Value: !Sub "https://${ParamCustomDomainName}/"
   LambdaArn:
     Description: "Lambda ARN"
     Value: !GetAtt Lambda.Arn
