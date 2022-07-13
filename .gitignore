@@ -17,6 +17,7 @@
 vendor/
 
 # misc
+.vscode/
 .env
 dist/
 docs/*
